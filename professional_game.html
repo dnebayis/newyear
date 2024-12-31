@@ -1,0 +1,146 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yılbaşı Hediyesi Toplama Oyunu</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #1a1a3d;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: linear-gradient(to bottom, #1a1a3d, #3d2b56);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const player = {
+            x: canvas.width / 2 - 25,
+            y: canvas.height - 100,
+            width: 50,
+            height: 50,
+            color: "#6a0dad",
+            dx: 0,
+        };
+
+        const snowflakes = [];
+        const snowflakeImage = new Image();
+        snowflakeImage.src = "snowflake_logo.png"; // Yüklenen görsel kullanılacak
+
+        const gifts = [];
+        const giftColors = ["#f54242", "#42f554", "#4287f5", "#f5d142"];
+        let score = 0;
+
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function createSnowflake() {
+            const x = Math.random() * canvas.width;
+            snowflakes.push({ x, y: 0, size: Math.random() * 30 + 20, speed: Math.random() * 2 + 1 });
+        }
+
+        function drawSnowflakes() {
+            for (let flake of snowflakes) {
+                ctx.drawImage(snowflakeImage, flake.x, flake.y, flake.size, flake.size);
+                flake.y += flake.speed;
+
+                // Eğer ekranın altına ulaşırlarsa yeniden başlat
+                if (flake.y > canvas.height) {
+                    flake.y = 0;
+                    flake.x = Math.random() * canvas.width;
+                }
+            }
+        }
+
+        function createGift() {
+            const x = Math.random() * (canvas.width - 30);
+            const size = 30;
+            const color = giftColors[Math.floor(Math.random() * giftColors.length)];
+            gifts.push({ x, y: 0, size, color });
+        }
+
+        function drawGifts() {
+            for (let gift of gifts) {
+                ctx.fillStyle = gift.color;
+                ctx.fillRect(gift.x, gift.y, gift.size, gift.size);
+                gift.y += 3; // Hediye düşme hızı
+            }
+        }
+
+        function detectCollision() {
+            for (let i = gifts.length - 1; i >= 0; i--) {
+                const gift = gifts[i];
+                if (
+                    player.x < gift.x + gift.size &&
+                    player.x + player.width > gift.x &&
+                    player.y < gift.y + gift.size &&
+                    player.y + player.height > gift.y
+                ) {
+                    gifts.splice(i, 1);
+                    score += 10;
+                }
+            }
+        }
+
+        function drawScore() {
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "20px Arial";
+            ctx.fillText(`Score: ${score}`, 20, 30);
+        }
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayer();
+            drawGifts();
+            drawScore();
+            drawSnowflakes();
+            detectCollision();
+
+            player.x += player.dx;
+
+            // Oyuncunun ekran dışına çıkmasını engelle
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width)
+                player.x = canvas.width - player.width;
+
+            requestAnimationFrame(update);
+        }
+
+        function keyDown(e) {
+            if (e.key === "ArrowRight") {
+                player.dx = 5;
+            } else if (e.key === "ArrowLeft") {
+                player.dx = -5;
+            }
+        }
+
+        function keyUp(e) {
+            if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                player.dx = 0;
+            }
+        }
+
+        document.addEventListener("keydown", keyDown);
+        document.addEventListener("keyup", keyUp);
+
+        setInterval(createGift, 1000);
+        setInterval(createSnowflake, 200);
+        update();
+    </script>
+</body>
+</html>
